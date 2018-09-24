@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import re
 
 
-df = pd.read_csv('players_2013-12-12.csv')
-players2 = pd.read_csv('all_players.csv')
+df = pd.read_csv('data/players_2013-12-12.csv')
+players2 = pd.read_csv('data/all_players.csv')
 
 def remove_death_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df.drop(columns=['death_date', 'death_city', 'death_state', 'death_country'])
@@ -15,6 +15,7 @@ def add_yrs_played(df: pd.DataFrame) -> pd.DataFrame:
     yrsadded['years_played'] = yrsadded['year_end'] - yrsadded['year_start']
 
     return yrsadded
+
 
 def filldraft_pick(df: pd.DataFrame):
     # df['draft_pick'] = df['draft_pick'].str.replace(r'[0-9]+th|[0-9]+st|[0-9]+rd|[0-9]+nd'
@@ -28,7 +29,18 @@ def filldraft_pick(df: pd.DataFrame):
     df['draft_pick'].fillna(max+1, inplace=True)
 
 
+def clean_position(pos: pd.Series):
+    pos = pos.apply(lambda x: str(x))
+    pos = pos.apply(lambda x: x.split('-')[0])
+    pos = pos.apply(lambda x: x.split('/')[0])
+
+    return pos.copy()
+
+
 if __name__ == "__main__":
+    df['position'] = clean_position(df['position'])
+    print(df.columns)
+    # df['position'].plot.hist()
     # players = remove_death_columns(df)
     # players = add_yrs_played(players)
     # filldraft_pick(players)

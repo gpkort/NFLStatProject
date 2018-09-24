@@ -12,7 +12,7 @@ TRACKED_STATS = ['draft_pick', 'team', 'player', 'pos', 'year_max',
 
 URL = "https://www.pro-football-reference.com/years/{}/draft.htm"
 
-CSV_FILE = 'AllDraftPicks.csv'
+CSV_FILE = 'data/AllDraftPicks.csv'
 
 
 def get_parse_row(row, year) -> dict:
@@ -72,7 +72,7 @@ def save_to_csv():
 
 
 def get_dataframe():
-    df = pd.read_csv('AllDraftPicks.csv')
+    df = pd.read_csv(CSV_FILE)
     df.drop('Unnamed: 0', inplace=True, axis=1)
     df = df[['year', 'round', 'draft_pick', 'player', 'pos', 'g',
              'year_max', 'years_as_primary_starter', 'all_pros_first_team']]
@@ -154,20 +154,18 @@ def get_draft_data_file():
     df = get_dataframe()
     return add_general_position(df)
 
+
 def get_num_name(name: str):
     return len(name.split(' '))
+
 
 if __name__ == '__main__':
     df = get_dataframe()
     add_general_position(df)
     print(df.columns)
     df['player'] = df['player'].apply(lambda x: str(x))
-    df['names'] = 0
-    df.assign(names=lambda row: len(row['player'].split(' ')))
-    # df['names'] = df.apply(lambda row: len(row.player.split(' ')))
-    print(df['player'].head())
-    print(df['names'].head())
-    #
+    print(df.head())
+
     # df_recent = df[df['year'] > 2010]
     # for i in range(1, 7):
     #     show_frequency_by_position(df[(df['round'] == i)],
