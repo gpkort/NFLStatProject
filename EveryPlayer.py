@@ -7,7 +7,9 @@ URL = "https://www.pro-football-reference.com"
 PLAYER = "players"
 
 def get_players_by_letter(letter: str):
-    req = requests.get(URL + '/' + PLAYER + '/' + letter)
+    url = URL + '/' + PLAYER + '/' + letter
+    print(url)
+    req = requests.get(url)
     soup = BeautifulSoup(req.text, "lxml")
     players = soup.find_all('div', {'id': 'div_players'})
 
@@ -18,4 +20,10 @@ def get_players_by_letter(letter: str):
 
 if __name__ == '__main__':
     all = []
-    for i in range(97)
+    for i in range(65, 91):
+        all.extend(get_players_by_letter(chr(i)))
+
+    print(len(all))
+    with open('all_players_url.txt', 'w') as f:
+        f.writelines(['%s\n' % url for url in all])
+
