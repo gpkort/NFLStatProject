@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import pandas as pd
 import requests
+import numpy as np
 
 
 URL = "https://www.pro-football-reference.com"
@@ -16,10 +17,25 @@ def get_players_by_letter(letter: str):
     urls = [u.get('href') for u in links]
     return urls
 
+
 def get_player_summary(url: str):
     req = requests.get(url)
     soup = BeautifulSoup(req.text, "lxml")
-    yrs = soup.find_all('div', {'id': 'div_players'})
+    body = soup.find_all('table', {'class': 'row_summable sortable stats_table'})[0].find('tbody')
+    rows = body.find_all('tr', {'class': 'full_table'})
+
+    totalgames, gamestart = 0, 0
+
+    for row in rows:
+        for g in row.find_all('td', {'data-stat': 'g'}):
+            if len(g.text) > 0:
+                totalgames = totalgames + int(g.text)
+        for gs in row.find_all('td', {'data-stat': 'gs'}):
+            if len(gs.text) > 0:
+                gamestart = gamestart + int(gs.text)
+
+    print(totalgames)
+    print(gamestart)
 
 
 
