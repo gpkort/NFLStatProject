@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import requests
 import numpy as np
+import collections
 
 
 URL = "https://www.pro-football-reference.com"
@@ -49,21 +50,50 @@ def get_player_summary(url: str):
 
     return {
         'name': playername,
-        'position':(pos[-1] if len(pos) > 0 else ''),
+        'position': (pos[-1] if len(pos) > 0 else ''),
         'start_year': startyear,
         'stop_year': stopyear,
         'total_game': totalgames,
         'games_started': gamestart
-        }
+    }
+
 
 if __name__ == '__main__':
-    info = get_player_summary(URL + '/players/A/AaitIs00.htm')
-    print(info)
-    # all = []
-    # for i in range(65, 91):
-    #     all.extend(get_players_by_letter(chr(i)))
+    player_url = 'all_players_url.txt'
+    roster, errors = [], []
 
-    # print(len(all))
-    # with open('all_players_url.txt', 'w') as f:
-    #     f.writelines(['%s\n' % url for url in all])
+    with open('all_players_url.txt') as f:
+        players = f.readlines()
+
+    players_url = [l.strip() for l in players]
+
+    for p in players_url:
+        player_url = p
+        print(player_url)
+        try:
+            roster.append(get_player_summary(URL + player_url))
+        except Exception as e:
+            print('****{}'.format(player_url))
+            errors.append('{} - {}\n'.format(player_url, e))
+
+    with open('EveryPlayer.csv', 'w') as pf:
+        pf.write('name, position, start_year, stop_year, total_game, games_started\n')
+
+        for p in roster:
+            pf.write('{},{},{},{},{},{}\n'.format(
+                p['name'],
+                p['position'],
+                p['start_year'],
+                p['stop_year'],
+                p['total_game'],
+                p['games_started']
+            ))
+
+    with open('Error.log', 'w') as err:
+        for e in errors:
+            err.write(e)
+
+
+
+
 
