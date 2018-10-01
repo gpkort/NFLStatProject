@@ -45,8 +45,12 @@ def get_player_summary(url: str):
 
     yr = rows[0].find_all('th', {'data-stat': 'year_id'})
     startyear = int(yr[0].text) if len(yr[0].text) > 0 else None
-    yr = rows[-1].find_all('th', {'data-stat': 'year_id'})
-    stopyear = int(yr[0].text) if len(yr[0].text) > 0 else None
+
+    if rows > 1:
+        yr = rows[-1].find_all('th', {'data-stat': 'year_id'})
+        stopyear = int(yr[0].text) if len(yr[0].text) > 0 else None
+    else:
+        stopyear = startyear
 
     return {
         'name': playername,
@@ -67,9 +71,12 @@ if __name__ == '__main__':
 
     players_url = [l.strip() for l in players]
 
-    for p in players_url:
+    for i, p in enumerate(players_url):
         player_url = p
-        print(player_url)
+
+        if i % 10:
+            print(player_url)
+
         try:
             roster.append(get_player_summary(URL + player_url))
         except Exception as e:
