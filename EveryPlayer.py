@@ -4,9 +4,9 @@ import requests
 import numpy as np
 import collections
 
-
 URL = "https://www.pro-football-reference.com"
 PLAYER = "players"
+
 
 def get_players_by_letter(letter: str):
     url = URL + '/' + PLAYER + '/' + letter
@@ -22,7 +22,15 @@ def get_players_by_letter(letter: str):
 def get_player_summary(url: str):
     req = requests.get(url)
     soup = BeautifulSoup(req.text, "lxml")
-    body = soup.find_all('table', {'class': 'row_summable sortable stats_table'})[0].find('tbody')
+    tables = soup.find_all('table', {'class': 'row_summable sortable stats_table'})
+
+    if len(tables) == 0:
+        tables = soup.find_all('table', {'class': 'sortable stats_table'})
+
+    if len(tables) == 0:
+        raise Exception("Cannot find Table")
+
+    body = tables[0].find('tbody')
     playername = soup.find('h1', {'itemprop': 'name'}).text
     rows = body.find_all('tr', {'class': 'full_table'})
 
@@ -46,7 +54,7 @@ def get_player_summary(url: str):
     yr = rows[0].find_all('th', {'data-stat': 'year_id'})
     startyear = int(yr[0].text) if len(yr[0].text) > 0 else None
 
-    if rows > 1:
+    if len(yr) > 1:
         yr = rows[-1].find_all('th', {'data-stat': 'year_id'})
         stopyear = int(yr[0].text) if len(yr[0].text) > 0 else None
     else:
@@ -54,7 +62,8 @@ def get_player_summary(url: str):
 
     return {
         'name': playername,
-        'position': (pos[-1] if len(pos) > 0 else ''),
+        'position': (pos[:-1] if len(pos) > 0 else ''),
+        'teams': teams[:-1] if len(teams) > 0 else '',
         'start_year': startyear,
         'stop_year': stopyear,
         'total_game': totalgames,
@@ -62,11 +71,11 @@ def get_player_summary(url: str):
     }
 
 
-if __name__ == '__main__':
-    player_url = 'all_players_url.txt'
+def make_every_player_file(player_url: str, out_file: str):
+    # player_url = 'all_players_url.txt'
     roster, errors = [], []
 
-    with open('all_players_url.txt') as f:
+    with open(player_url) as f:
         players = f.readlines()
 
     players_url = [l.strip() for l in players]
@@ -74,8 +83,8 @@ if __name__ == '__main__':
     for i, p in enumerate(players_url):
         player_url = p
 
-        if i % 10:
-            print(player_url)
+        if i % 10 == 0:
+            print('{}: {}'.format(i, player_url))
 
         try:
             roster.append(get_player_summary(URL + player_url))
@@ -83,12 +92,13 @@ if __name__ == '__main__':
             print('****{}'.format(player_url))
             errors.append('{} - {}\n'.format(player_url, e))
 
-    with open('EveryPlayer.csv', 'w') as pf:
-        pf.write('name, position, start_year, stop_year, total_game, games_started\n')
+    with open(out_file, 'w') as pf:
+        pf.write('name,teams,position,start_year,stop_year,total_game,games_started\n')
 
         for p in roster:
-            pf.write('{},{},{},{},{},{}\n'.format(
+            pf.write('{},{},{},{},{},{},{}\n'.format(
                 p['name'],
+                p['teams'],
                 p['position'],
                 p['start_year'],
                 p['stop_year'],
@@ -101,6 +111,17 @@ if __name__ == '__main__':
             err.write(e)
 
 
+if __name__ == '__main__':
+    players = ['/players/A/AbbeJo20.htm',
+               '/players/A/AaitIs00.htm',
+               '/players/A/AbbeJo20.htm',
+               '/players/A/AndeKe00.htm',
+               '/players/A/AndeKe20.htm',
+               '/players/A/AndeKi20.htm',
+               '/players/A/AbelFr20.htm',
+               '/players/A/AbraSi20.htm'
+               ]
 
-
-
+    for p in players:
+        p_url = URL + p
+        print('URL: {} - {}'.format(p_url, get_player_summary(p_url))) #6
