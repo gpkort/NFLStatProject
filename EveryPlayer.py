@@ -22,6 +22,7 @@ def get_players_by_letter(letter: str):
 def get_player_summary(url: str):
     req = requests.get(url)
     soup = BeautifulSoup(req.text, "lxml")
+    playername = soup.find('h1', {'itemprop': 'name'}).text
     tables = soup.find_all('table', {'class': 'row_summable sortable stats_table'})
 
     if len(tables) == 0:
@@ -31,8 +32,14 @@ def get_player_summary(url: str):
         raise Exception("Cannot find Table")
 
     body = tables[0].find('tbody')
-    playername = soup.find('h1', {'itemprop': 'name'}).text
     rows = body.find_all('tr', {'class': 'full_table'})
+
+    if len(rows) == 0 and len(tables) > 1:
+        body = tables[1].find('tbody')
+        rows = body.find_all('tr', {'class': 'full_table'})
+
+    if len(rows) == 0:
+        raise Exception('Could not find rows in table')
 
     totalgames, gamestart = 0, 0
     teams, pos = str(), str()
@@ -52,11 +59,11 @@ def get_player_summary(url: str):
                 pos = p.text + ','
 
     yr = rows[0].find_all('th', {'data-stat': 'year_id'})
-    startyear = int(yr[0].text) if len(yr[0].text) > 0 else None
+    startyear = int(yr[0].text.replace('*', '').replace('+', '')) if len(yr[0].text) > 0 else None
 
-    if len(yr) > 1:
+    if len(rows) > 1:
         yr = rows[-1].find_all('th', {'data-stat': 'year_id'})
-        stopyear = int(yr[0].text) if len(yr[0].text) > 0 else None
+        stopyear = int(yr[0].text.replace('*', '').replace('+', '')) if len(yr[0].text) > 0 else None
     else:
         stopyear = startyear
 
@@ -112,16 +119,6 @@ def make_every_player_file(player_url: str, out_file: str):
 
 
 if __name__ == '__main__':
-    players = ['/players/A/AbbeJo20.htm',
-               '/players/A/AaitIs00.htm',
-               '/players/A/AbbeJo20.htm',
-               '/players/A/AndeKe00.htm',
-               '/players/A/AndeKe20.htm',
-               '/players/A/AndeKi20.htm',
-               '/players/A/AbelFr20.htm',
-               '/players/A/AbraSi20.htm'
-               ]
-
-    for p in players:
-        p_url = URL + p
-        print('URL: {} - {}'.format(p_url, get_player_summary(p_url))) #6
+    # print(get_player_summary('https://www.pro-football-reference.com/players/A/AdamDa01.htm'))
+    make_every_player_file('wrongtable.txt', 'ErrTable.log')
+    # print('1975*+'.replace('*', '').replace('+', ''))
