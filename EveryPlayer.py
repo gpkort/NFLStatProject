@@ -61,7 +61,10 @@ def process_rows(rows, playername):
     for row in rows:
         for g in row.find_all('td', {'data-stat': 'g'}):
             if len(g.text) > 0:
-                totalgames = totalgames + int(g.text)
+                if g.text == '½':
+                    totalgames = totalgames + 1
+                else:
+                    totalgames = totalgames + int(g.text)
         for gs in row.find_all('td', {'data-stat': 'gs'}):
             if len(gs.text) > 0:
                 gamestart = gamestart + int(gs.text)
@@ -117,23 +120,31 @@ def make_every_player_file(player_url: str, out_file: str):
         pf.write('name,teams,position,start_year,stop_year,total_game,games_started\n')
 
         for p in roster:
-            pf.write('{},{},{},{},{},{},{}\n'.format(
-                p['name'],
-                p['teams'],
-                p['position'],
-                p['start_year'],
-                p['stop_year'],
-                p['total_game'],
-                p['games_started']
-            ))
+            pf.write(get_csv_str(p))
 
     with open('Error.log', 'w') as err:
         for e in errors:
             err.write(e)
 
+def get_csv_str(player: dict):
+    """
+
+    :type player: dict
+    """
+    return '{},{},{},{},{},{},{}\n'.format(
+        player['name'],
+        player['teams'],
+        player['position'],
+        player['start_year'],
+        player['stop_year'],
+        player['total_game'],
+        player['games_started']
+        )
+
 
 if __name__ == '__main__':
-    # print(get_player_summary('https://www.pro-football-reference.com/players/A/AdamMa00.htm'))
-    print(get_player_summary('https://www.pro-football-reference.com/players/E/ElwaJo00.htm'))
+    print(get_csv_str(get_player_summary('https://www.pro-football-reference.com/players/D/DaviVo99.htm')))
+    # print(get_player_summary('https://www.pro-football-reference.com/players/E/ElwaJo00.htm'))
+
     # make_every_player_file('wrongtable.txt', 'ErrTable.log')
     # print('1975*+'.replace('*', '').replace('+', ''))
