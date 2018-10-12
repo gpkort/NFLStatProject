@@ -66,8 +66,7 @@ class ProBowlRoster(object):
 def get_years_roster(yr, roster: ProBowlRoster):
     req = requests.get(URL.format(yr))
     soup = BeautifulSoup(req.text, "lxml")
-    table = soup.find('table', {'class': 'sortable stats_table',
-                                     'id': 'pro_bowl'})
+    table = soup.find('table', {'class': 'sortable stats_table', 'id': 'pro_bowl'})
     if table:
         body = table.find('tbody')
         for row in body.find_all('tr'):
@@ -84,6 +83,10 @@ def process_row(row):
     for cell in row.find_all('td'):
         if cell.get("data-stat") == "player":
             name = cell.get('csk', '')
+            names = name.split(',')
+            if len(names) > 1:
+                name = names[1] + ' ' + names[0]
+
             found_play = True
         if cell.get("data-stat") == "team":
             team_tag = cell.find('a')
@@ -92,17 +95,30 @@ def process_row(row):
         if found_play and found_team:
             break
 
-
     return name, pos, team
 
+from random import randint
+
+def roll(*dice):
+    return sum(randint(1, die) for die in dice)
 
 if __name__ == '__main__':
     print('ProwBowl Scrapper')
-    play_roster = ProBowlRoster()
 
-    for yr in range(FIRST_YEAR, LAST_YEAR+1):
-        print('Year = {}'.format(yr))
-        get_years_roster(yr, play_roster)
+    for i in range(100):
+        print(roll(6, 6, 6))
 
-    print(*play_roster.get_comma_delimited_sting())
+    # print("{year}-{month}-{day}".format(year, day, month))
+    # play_roster = ProBowlRoster()
+    #
+    # for yr in range(FIRST_YEAR, LAST_YEAR+1):
+    #     print('Year = {}'.format(yr))
+    #     get_years_roster(yr, play_roster)
+    #
+    # with open('data/allProbowlPlayers.csv', 'w') as pf:
+    #     pf.write('name,years,postions,teams\n')
+    #
+    #     for line in play_roster.get_comma_delimited_sting():
+    #         pf.write(line)
+    # print(*play_roster.get_comma_delimited_sting())
 
